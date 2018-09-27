@@ -43,3 +43,21 @@ class OAuth:
             self._refresh_token = result['refresh_token']
         else:
             self._logger.error('get access token: failed')
+
+    def refresh_token(self) -> None:
+        self._logger.info('refresh token')
+        if self._refresh_token is not None:
+            self._logger.info('refresh token: success')
+            data = {'grant_type': 'refresh_token',
+                    'client_id': self._client_id,
+                    'client_secret': self._client_secret,
+                    'refresh_token': self._refresh_token}
+            response = requests.post(_token_url, data=data)
+            if response.ok:
+                result = response.json()
+                self._access_token = result['access_token']
+                self._refresh_token = result['refresh_token']
+            else:
+                self._logger.error('refresh token: failed')
+        else:
+            self._logger.error('refresh token: token is None')
