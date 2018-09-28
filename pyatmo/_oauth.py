@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import pathlib
 from typing import List, Optional
 import requests
+import yaml
 
 
 _token_url = 'https://api.netatmo.com/oauth2/token'
@@ -61,6 +63,24 @@ class OAuth:
                 self._logger.error('refresh token: failed')
         else:
             self._logger.error('refresh token: token is None')
+
+    def save_token(self, path: pathlib.Path) -> None:
+        self._logger.info('save token: {0}'.format(path))
+        if (self._access_token is not None
+                and self._refresh_token is not None):
+            with path.open(mode='w') as outfile:
+                data = {'access_token': self._access_token,
+                        'refresh_token': self._refresh_token}
+                yaml.dump(data, outfile, default_flow_style=False)
+        else:
+            self._logger.error('token is None')
+
+    def load_token(self, path: pathlib.Path) -> None:
+        self._logger.info('load token: {0}'.format(path))
+        with path.open() as infile:
+            data = yaml.load(infile)
+            self._access_token = data['access_token']
+            self._refresh_token = data['refresh_token']
 
     @property
     def access_token(self) -> Optional[str]:
