@@ -61,3 +61,7 @@ class OAuth:
                 self._logger.error('refresh token: failed')
         else:
             self._logger.error('refresh token: token is None')
+
+    @property
+    def access_token(self) -> Optional[str]:
+        return self._access_token
