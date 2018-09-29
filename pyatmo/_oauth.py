@@ -15,6 +15,7 @@ class OAuth:
             self,
             client_id: str,
             client_secret: str,
+            token_file: Optional[pathlib.Path] = None,
             logger: Optional[logging.Logger] = None) -> None:
         # logger
         self._logger = logger or logging.getLogger(__name__)
@@ -24,6 +25,10 @@ class OAuth:
         # token
         self._access_token: Optional[str] = None
         self._refresh_token: Optional[str] = None
+        # token file
+        self._token_file = token_file
+        if self._token_file is not None and self._token_file.exists():
+            self.load_token(self._token_file)
 
     def get_access_token(
             self,
@@ -43,6 +48,9 @@ class OAuth:
             result = response.json()
             self._access_token = result['access_token']
             self._refresh_token = result['refresh_token']
+            # save
+            if self._token_file is not None:
+                self.save_token(self._token_file)
         else:
             self._logger.error('get access token: failed')
 
@@ -59,6 +67,9 @@ class OAuth:
                 result = response.json()
                 self._access_token = result['access_token']
                 self._refresh_token = result['refresh_token']
+                # save
+                if self._token_file is not None:
+                    self.save_token(self._token_file)
             else:
                 self._logger.error('refresh token: failed')
         else:
