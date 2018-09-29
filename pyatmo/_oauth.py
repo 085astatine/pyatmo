@@ -2,7 +2,7 @@
 
 import logging
 import pathlib
-from typing import List, Optional
+from typing import Dict, List, Optional
 import requests
 import yaml
 
@@ -45,9 +45,7 @@ class OAuth:
         response = requests.post(_token_url, data=data)
         if response.ok:
             self._logger.info('get access token: success')
-            result = response.json()
-            self._access_token = result['access_token']
-            self._refresh_token = result['refresh_token']
+            _update_token(self, response.json())
             # save
             if self._token_file is not None:
                 self.save_token(self._token_file)
@@ -64,9 +62,7 @@ class OAuth:
                     'refresh_token': self._refresh_token}
             response = requests.post(_token_url, data=data)
             if response.ok:
-                result = response.json()
-                self._access_token = result['access_token']
-                self._refresh_token = result['refresh_token']
+                _update_token(self, response.json())
                 # save
                 if self._token_file is not None:
                     self.save_token(self._token_file)
@@ -96,3 +92,8 @@ class OAuth:
     @property
     def access_token(self) -> Optional[str]:
         return self._access_token
+
+
+def _update_token(self: OAuth, data: Dict[str, str]) -> None:
+    self._access_token = data['access_token']
+    self._refresh_token = data['refresh_token']
