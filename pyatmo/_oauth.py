@@ -7,6 +7,9 @@ import requests
 import yaml
 
 
+__all__ = ['OAuth']
+
+
 _token_url = 'https://api.netatmo.com/oauth2/token'
 
 
