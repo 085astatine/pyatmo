@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 import logging
 import pathlib
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 import requests
 import yaml
 
@@ -28,6 +29,9 @@ class OAuth:
         # token
         self._access_token: Optional[str] = None
         self._refresh_token: Optional[str] = None
+        # time
+        self._token_created_time: Optional[datetime.datetime] = None
+        self._token_expiration_time: Optional[datetime.datetime] = None
         # token file
         self._token_file = token_file
         if self._token_file is not None and self._token_file.exists():
@@ -77,10 +81,19 @@ class OAuth:
     def save_token(self, path: pathlib.Path) -> None:
         self._logger.info('save token: {0}'.format(path))
         if (self._access_token is not None
-                and self._refresh_token is not None):
+                and self._refresh_token is not None
+                and self._token_created_time is not None
+                and self._token_expiration_time is not None):
             with path.open(mode='w') as outfile:
-                data = {'access_token': self._access_token,
-                        'refresh_token': self._refresh_token}
+                data: Dict[str, Any] = {}
+                data['access_token'] = self._access_token
+                data['refresh_token'] = self._refresh_token
+                data['created_time'] = {
+                        'timestamp': self._token_created_time.timestamp(),
+                        'date': str(self._token_created_time)}
+                data['expiration_time'] = {
+                        'timestamp': self._token_expiration_time.timestamp(),
+                        'date': str(self._token_expiration_time)}
                 yaml.dump(data, outfile, default_flow_style=False)
         else:
             self._logger.error('token is None')
@@ -91,6 +104,10 @@ class OAuth:
             data = yaml.load(infile)
             self._access_token = data['access_token']
             self._refresh_token = data['refresh_token']
+            self._token_created_time = datetime.datetime.fromtimestamp(
+                    int(data['created_time']['timestamp'])).astimezone()
+            self._token_expiration_time = datetime.datetime.fromtimestamp(
+                    int(data['expiration_time']['timestamp'])).astimezone()
 
     @property
     def access_token(self) -> Optional[str]:
@@ -100,3 +117,7 @@ class OAuth:
 def _update_token(self: OAuth, data: Dict[str, str]) -> None:
     self._access_token = data['access_token']
     self._refresh_token = data['refresh_token']
+    self._token_created_time = datetime.datetime.now().astimezone()
+    self._token_expiration_time = (
+            self._token_created_time
+            + datetime.timedelta(seconds=int(data['expires_in'])))
