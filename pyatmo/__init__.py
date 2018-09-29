@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from . import _oauth
+from ._client import Client
