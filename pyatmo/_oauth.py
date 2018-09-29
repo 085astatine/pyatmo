@@ -30,6 +30,7 @@ class OAuth:
         self._access_token: Optional[str] = None
         self._refresh_token: Optional[str] = None
         # time
+        self._timezone = datetime.datetime.now().astimezone().tzinfo
         self._token_created_time: Optional[datetime.datetime] = None
         self._token_expiration_time: Optional[datetime.datetime] = None
         # token file
@@ -104,13 +105,23 @@ class OAuth:
             data = yaml.load(infile)
             self._access_token = data['access_token']
             self._refresh_token = data['refresh_token']
-            self._token_created_time = datetime.datetime.fromtimestamp(
-                    int(data['created_time']['timestamp'])).astimezone()
-            self._token_expiration_time = datetime.datetime.fromtimestamp(
-                    int(data['expiration_time']['timestamp'])).astimezone()
+            self._token_created_time = (
+                    datetime.datetime.fromtimestamp(
+                            int(data['created_time']['timestamp']))
+                    .replace(tzinfo=self._timezone))
+            self._token_expiration_time = (
+                    datetime.datetime.fromtimestamp(
+                            int(data['expiration_time']['timestamp']))
+                    .replace(tzinfo=self._timezone))
 
     @property
     def access_token(self) -> Optional[str]:
+        # expiration check
+        if (self._token_expiration_time is not None
+                and (datetime.datetime.now(tz=self._timezone)
+                     >= self._token_expiration_time)):
+            self._logger.info('access token is expired')
+            self.refresh_token()
         return self._access_token
 
 
