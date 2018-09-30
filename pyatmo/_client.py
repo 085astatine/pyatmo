@@ -2,8 +2,9 @@
 
 import logging
 import pathlib
-from typing import Optional
+from typing import List, Optional
 from ._oauth import OAuth
+from ._scope import Scope
 
 
 class Client:
@@ -11,6 +12,7 @@ class Client:
             self,
             client_id: str,
             client_secret: str,
+            scope_list: Optional[List[Scope]] = None,
             token_file: Optional[pathlib.Path] = None,
             logger: Optional[logging.Logger] = None) -> None:
         # logger
@@ -19,6 +21,7 @@ class Client:
         self._oauth = OAuth(
                 client_id,
                 client_secret,
+                scope_list=scope_list,
                 token_file=token_file,
                 logger=self._logger.getChild('oauth'))
 
@@ -26,4 +29,4 @@ class Client:
             self,
             username: str,
             password: str) -> None:
-        self._oauth.get_access_token(username, password, ['read_station'])
+        self._oauth.get_access_token(username, password)

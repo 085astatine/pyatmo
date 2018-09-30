@@ -3,9 +3,10 @@
 import datetime
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 import requests
 import yaml
+from ._scope import Scope
 
 
 __all__ = ['OAuth']
@@ -19,6 +20,7 @@ class OAuth:
             self,
             client_id: str,
             client_secret: str,
+            scope_list: Optional[List[Scope]] = None,
             token_file: Optional[pathlib.Path] = None,
             logger: Optional[logging.Logger] = None) -> None:
         # logger
@@ -33,6 +35,11 @@ class OAuth:
         self._timezone = datetime.datetime.now().astimezone().tzinfo
         self._token_created_time: Optional[datetime.datetime] = None
         self._token_expiration_time: Optional[datetime.datetime] = None
+        # scope
+        self._scope_list: Optional[Tuple[Scope, ...]] = None
+        if scope_list is not None and len(scope_list) != 0:
+            self._scope_list = tuple(sorted(scope_list, key=lambda x: x.value))
+        assert(self._scope_list is None or len(self._scope_list) != 0)
         # token file
         self._token_file = token_file
         if self._token_file is not None and self._token_file.exists():
@@ -41,15 +48,15 @@ class OAuth:
     def get_access_token(
             self,
             username: str,
-            password: str,
-            scope_list: List[str]) -> None:
+            password: str) -> None:
         self._logger.info('get access token')
         data = {'grant_type': 'password',
                 'client_id': self._client_id,
                 'client_secret': self._client_secret,
                 'username': username,
-                'password': password,
-                'scope': ' '.join(scope_list)}
+                'password': password}
+        if self._scope_list is not None:
+            data['scope'] = ' '.join(map(str, self._scope_list))
         response = requests.post(_token_url, data=data)
         if response.ok:
             self._logger.info('get access token: success')
@@ -87,14 +94,19 @@ class OAuth:
                 and self._token_expiration_time is not None):
             with path.open(mode='w') as outfile:
                 data: Dict[str, Any] = {}
+                # token
                 data['access_token'] = self._access_token
                 data['refresh_token'] = self._refresh_token
+                # time
                 data['created_time'] = {
                         'timestamp': self._token_created_time.timestamp(),
                         'date': str(self._token_created_time)}
                 data['expiration_time'] = {
                         'timestamp': self._token_expiration_time.timestamp(),
                         'date': str(self._token_expiration_time)}
+                # scope
+                if self._scope_list is not None:
+                    data['scope_list'] = list(map(str, self._scope_list))
                 yaml.dump(data, outfile, default_flow_style=False)
         else:
             self._logger.error('token is None')
@@ -103,8 +115,28 @@ class OAuth:
         self._logger.info('load token: {0}'.format(path))
         with path.open() as infile:
             data = yaml.load(infile)
+            # scope match
+            scope_list: Optional[Tuple[Scope, ...]] = (
+                    tuple(sorted(
+                            (scope for scope in Scope
+                             if str(scope) in data['scope_list']),
+                            key=lambda x: x.value))
+                    if 'scope_list' in data
+                    else None)
+            if scope_list != self._scope_list:
+                self._logger.error(
+                        'scope mismatch: \'{0}\' (self) &  \'{1}\' (file)'
+                        .format(', '.join(map(str, self._scope_list))
+                                if self._scope_list is not None
+                                else self._scope_list,
+                                ', '.join(map(str, scope_list))
+                                if scope_list is not None
+                                else scope_list))
+            assert(scope_list == self._scope_list)
+            # token
             self._access_token = data['access_token']
             self._refresh_token = data['refresh_token']
+            # time
             self._token_created_time = (
                     datetime.datetime.fromtimestamp(
                             int(data['created_time']['timestamp']))
