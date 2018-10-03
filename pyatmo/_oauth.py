@@ -134,8 +134,7 @@ class OAuth:
                                 else scope_list))
             assert(scope_list == self._scope_list)
             # token
-            self._access_token = data['access_token']
-            self._refresh_token = data['refresh_token']
+            _set_token(self, data['access_token'], data['refresh_token'])
             # time
             self._token_created_time = (
                     datetime.datetime.fromtimestamp(
@@ -164,9 +163,13 @@ class OAuth:
 
 
 def _update_token(self: OAuth, data: Dict[str, str]) -> None:
-    self._access_token = data['access_token']
-    self._refresh_token = data['refresh_token']
+    _set_token(self, data['access_token'], data['refresh_token'])
     self._token_created_time = datetime.datetime.now().astimezone()
     self._token_expiration_time = (
             self._token_created_time
             + datetime.timedelta(seconds=int(data['expires_in'])))
+
+
+def _set_token(self: OAuth, access_token: str, refresh_token: str) -> None:
+    self._access_token = access_token
+    self._refresh_token = refresh_token
