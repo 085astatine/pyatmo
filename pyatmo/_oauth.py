@@ -64,34 +64,43 @@ class OAuth:
                 'password': password}
         if self._scope_list is not None:
             data['scope'] = ' '.join(map(str, self._scope_list))
+        self._logger.debug('data: {0}'.format(data))
         response = requests.post(_token_url, data=data)
         if response.ok:
             self._logger.info('get access token: success')
             _update_token(self, response.json())
+            self._logger.debug('status_code: {0}'.format(response.status_code))
+            self._logger.debug('text: {0}'.format(response.text))
             # save
             if self._token_file is not None:
                 self.save_token(self._token_file)
         else:
-            self._logger.error('get access token: failed')
+            self._logger.error('get access token: failure')
+            self._logger.error('status_code: {0}'.format(response.status_code))
+            self._logger.error('text: {0}'.format(response.text))
 
     def refresh_token(self) -> None:
         self._logger.info('refresh token')
-        if self._refresh_token is not None:
+        if self._refresh_token is None:
+            self._logger.error('refresh token: refresh token is None')
+            return
+        data = {'grant_type': 'refresh_token',
+                'client_id': self._client_id,
+                'client_secret': self._client_secret,
+                'refresh_token': self._refresh_token}
+        response = requests.post(_token_url, data=data)
+        if response.ok:
             self._logger.info('refresh token: success')
-            data = {'grant_type': 'refresh_token',
-                    'client_id': self._client_id,
-                    'client_secret': self._client_secret,
-                    'refresh_token': self._refresh_token}
-            response = requests.post(_token_url, data=data)
-            if response.ok:
-                _update_token(self, response.json())
-                # save
-                if self._token_file is not None:
-                    self.save_token(self._token_file)
-            else:
-                self._logger.error('refresh token: failed')
+            _update_token(self, response.json())
+            self._logger.debug('status_code: {0}'.format(response.status_code))
+            self._logger.debug('text: {0}'.format(response.text))
+            # save
+            if self._token_file is not None:
+                self.save_token(self._token_file)
         else:
-            self._logger.error('refresh token: token is None')
+            self._logger.error('refresh token: failure')
+            self._logger.error('status_code: {0}'.format(response.status_code))
+            self._logger.error('text: {0}'.format(response.text))
 
     def save_token(self, path: pathlib.Path) -> None:
         self._logger.info('save token: {0}'.format(path))
