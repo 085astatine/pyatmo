@@ -4,7 +4,7 @@ import logging
 import pathlib
 from typing import Any, Dict, List, Optional
 import requests
-from ._oauth import OAuth
+from ._oauth import CredentialFilter, OAuth
 from ._scope import Scope
 
 
@@ -18,6 +18,8 @@ class Client:
             logger: Optional[logging.Logger] = None) -> None:
         # logger
         self._logger = logger or logging.getLogger(__name__)
+        for handler in self._logger.handlers:
+            handler.addFilter(CredentialFilter())
         # oauth
         self._oauth = OAuth(
                 client_id,

@@ -3,13 +3,13 @@
 import datetime
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 import requests
 import yaml
 from ._scope import Scope
 
 
-__all__ = ['OAuth']
+__all__ = ['CredentialFilter', 'OAuth']
 
 
 _token_url = 'https://api.netatmo.com/oauth2/token'
@@ -23,6 +23,9 @@ class OAuth:
             scope_list: Optional[List[Scope]] = None,
             token_file: Optional[pathlib.Path] = None,
             logger: Optional[logging.Logger] = None) -> None:
+        # register to filter
+        CredentialFilter.register_credential(client_id, 'CLIENT_ID')
+        CredentialFilter.register_credential(client_secret, 'CLIENT_SECRET')
         # logger
         self._logger = logger or logging.getLogger(__name__)
         # client
@@ -49,6 +52,10 @@ class OAuth:
             self,
             username: str,
             password: str) -> None:
+        # register to filter
+        CredentialFilter.register_credential(username, 'USERNAME')
+        CredentialFilter.register_credential(password, 'PASSWORD')
+        # request
         self._logger.info('get access token')
         data = {'grant_type': 'password',
                 'client_id': self._client_id,
@@ -171,5 +178,43 @@ def _update_token(self: OAuth, data: Dict[str, str]) -> None:
 
 
 def _set_token(self: OAuth, access_token: str, refresh_token: str) -> None:
+    # unregister to fileter
+    if self._access_token is not None:
+        CredentialFilter.unregister_credential(
+                self._access_token,
+                'ACCESS_TOKEN')
+    if self._refresh_token is not None:
+        CredentialFilter.unregister_credential(
+                self._refresh_token,
+                'REFRESH_TOKEN')
+    # set token
     self._access_token = access_token
     self._refresh_token = refresh_token
+    # register to fileter
+    CredentialFilter.register_credential(self._access_token, 'ACCESS_TOKEN')
+    CredentialFilter.register_credential(self._refresh_token, 'REFRESH_TOKEN')
+
+
+class CredentialFilter(logging.Filter):
+    class Credential(NamedTuple):
+        name: str
+        value: str
+
+    _credential_list: List[Credential] = []
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        message = str(record.msg)
+        for credential in self._credential_list:
+            message = message.replace(
+                    credential.name,
+                    '***{0}***'.format(credential.value))
+        record.msg = message
+        return True
+
+    @classmethod
+    def register_credential(cls, name: str, value: str):
+        cls._credential_list.append(cls.Credential(name, value))
+
+    @classmethod
+    def unregister_credential(cls, name: str, value: str):
+        cls._credential_list.remove(cls.Credential(name, value))
