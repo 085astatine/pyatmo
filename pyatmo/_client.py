@@ -109,3 +109,36 @@ class Client:
             self._logger.error('status_code: {0}'.format(response.status_code))
             self._logger.error('text: {0}'.format(response.text))
             return None
+
+    def get_public_data(
+            self,
+            lat_le: float,
+            lon_ne: float,
+            lat_sw: float,
+            lon_sw: float,
+            required_data: Optional[str] = None,
+            filter: Optional[bool] = None) -> Optional[Dict[str, Any]]:
+        self._logger.info('get public data')
+        url = 'https://api.netatmo.com/api/getpublicdata'
+        data: Dict[str, Any] = {}
+        data['access_token'] = self._oauth.access_token
+        data['lat_ne'] = lat_le
+        data['lon_ne'] = lon_ne
+        data['lat_sw'] = lat_sw
+        data['lon_sw'] = lon_sw
+        if required_data is not None:
+            data['required_data'] = required_data
+        if filter is not None:
+            data['filter'] = filter
+        self._logger.debug('data: {0}'.format(data))
+        response = requests.post(url, data=data)
+        if response.ok:
+            self._logger.info('get public data: success')
+            self._logger.debug('status_code: {0}'.format(response.status_code))
+            self._logger.debug('text: {0}'.format(response.text))
+            return response.json()
+        else:
+            self._logger.error('get public data: failure')
+            self._logger.error('status_code: {0}'.format(response.status_code))
+            self._logger.error('text: {0}'.format(response.text))
+            return None
