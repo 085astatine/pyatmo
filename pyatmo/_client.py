@@ -62,3 +62,50 @@ class Client:
             self._logger.error('status_code: {0}'.format(response.status_code))
             self._logger.error('text: {0}'.format(response.text))
             return None
+
+    def get_measure(
+            self,
+            device_id: str,
+            module_id: str,
+            scale: str,
+            type_list: List[str],
+            date_begin: Optional[int] = None,
+            date_end: Optional[int] = None,
+            limit: Optional[int] = None,
+            optimize: Optional[bool] = None,
+            real_time: Optional[bool] = None) -> Optional[Dict[str, Any]]:
+        self._logger.info('get measure')
+        if (not self._oauth.is_included(Scope.READ_STATION)
+                and not self._oauth.is_included(Scope.READ_THERMOSTAT)):
+            self._logger.error('get measure: failure')
+            self._logger.error('dose not have good scope rights')
+            return None
+        url = 'https://api.netatmo.com/api/getmeasure'
+        data: Dict[str, Any] = {}
+        data['access_token'] = self._oauth.access_token
+        data['device_id'] = device_id
+        data['module_id'] = module_id
+        data['scale'] = scale
+        data['type'] = ','.join(type_list)
+        if date_begin is not None:
+            data['date_begin'] = date_begin
+        if date_end is not None:
+            data['date_end'] = date_end
+        if limit is not None:
+            data['limit'] = limit
+        if optimize is not None:
+            data['optimize'] = optimize
+        if real_time is not None:
+            data['real_time'] = real_time
+        self._logger.debug('data: {0}'.format(data))
+        response = requests.post(url, data=data)
+        if response.ok:
+            self._logger.info('get measure: success')
+            self._logger.debug('status_code: {0}'.format(response.status_code))
+            self._logger.debug('text: {0}'.format(response.text))
+            return response.json()
+        else:
+            self._logger.error('get measure: failure')
+            self._logger.error('status_code: {0}'.format(response.status_code))
+            self._logger.error('text: {0}'.format(response.text))
+            return None
