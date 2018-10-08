@@ -4,6 +4,7 @@ import logging
 import pathlib
 import sqlite3
 from typing import Optional
+from ._device import Device
 from .._client import Client
 
 
@@ -29,13 +30,7 @@ def _create_table(self: Database) -> None:
     self._logger.info('create table')
     cursor = self._connection.cursor()
     # devices
-    cursor.execute(
-            'CREATE TABLE devices'
-            '(id text PRIMARY KEY,'
-            ' name text,'
-            ' latitude real,'
-            ' longitude real,'
-            ' altitude real)')
+    cursor.execute(Device.create_table_command())
     # modules
     cursor.execute(
             'CREATE TABLE modules'
