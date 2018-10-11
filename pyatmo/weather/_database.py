@@ -24,3 +24,8 @@ class Database:
                 'sqlite:///{0}'.format(path.as_posix()),
                 encoding='utf-8')
         _DeclarativeBase.metadata.create_all(self._engine)
+        # sqlalchemy session maker
+        self._session_maker = sqlalchemy.orm.sessionmaker(bind=self._engine)
+
+    def session(self, **kwargs) -> sqlalchemy.orm.session.Session:
+        return self._session_maker(**kwargs)
