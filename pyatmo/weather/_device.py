@@ -14,6 +14,18 @@ class Device(_DeclarativeBase):
     longitude = sqlalchemy.Column(sqlalchemy.Float)
     altitude = sqlalchemy.Column(sqlalchemy.Float)
 
+    def __repr__(self) -> str:
+        return '{0}.{1}({2})'.format(
+                self.__class__.__module__,
+                self.__class__.__name__,
+                ', '.join('{0}={1}'.format(column, repr(getattr(self, column)))
+                          for column
+                          in ['id',
+                              'name',
+                              'latitude',
+                              'longitude',
+                              'altitude']))
+
 
 class Module(_DeclarativeBase):
     # table name
@@ -28,6 +40,18 @@ class Module(_DeclarativeBase):
     data_type = sqlalchemy.Column(sqlalchemy.String)
     # relationship
     device = sqlalchemy.orm.relationship('Device', back_populates='modules')
+
+    def __repr__(self) -> str:
+        return '{0}.{1}({2})'.format(
+                self.__class__.__module__,
+                self.__class__.__name__,
+                ', '.join('{0}={1}'.format(column, repr(getattr(self, column)))
+                          for column
+                          in ['id',
+                              'device_id',
+                              'name',
+                              'module_type',
+                              'data_type']))
 
 
 Device.modules = sqlalchemy.orm.relationship(
