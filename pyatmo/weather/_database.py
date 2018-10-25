@@ -98,3 +98,14 @@ class Database:
         session.flush()
         session.commit()
         session.close()
+
+    def device(self, device_id: str) -> Optional[Device]:
+        session = self.session()
+        result: Optional[Device] = (
+                session.query(Device)
+                .filter_by(id=device_id).one_or_none())
+        if result is not None:
+            # load relationship
+            result.modules
+        session.close()
+        return result
