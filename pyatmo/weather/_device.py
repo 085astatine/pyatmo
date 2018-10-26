@@ -15,16 +15,14 @@ class Device(_DeclarativeBase):
     altitude = sqlalchemy.Column(sqlalchemy.Float)
 
     def __repr__(self) -> str:
+        mapper = sqlalchemy.inspect(self.__class__)
         return '{0}.{1}({2})'.format(
                 self.__class__.__module__,
                 self.__class__.__name__,
-                ', '.join('{0}={1}'.format(column, repr(getattr(self, column)))
-                          for column
-                          in ['id',
-                              'name',
-                              'latitude',
-                              'longitude',
-                              'altitude']))
+                ', '.join(
+                        '{0}={1}'.format(column.key,
+                                         repr(getattr(self, column.key)))
+                        for column in mapper.column_attrs))
 
 
 class Module(_DeclarativeBase):
@@ -42,16 +40,14 @@ class Module(_DeclarativeBase):
     device = sqlalchemy.orm.relationship('Device', back_populates='modules')
 
     def __repr__(self) -> str:
+        mapper = sqlalchemy.inspect(self.__class__)
         return '{0}.{1}({2})'.format(
                 self.__class__.__module__,
                 self.__class__.__name__,
-                ', '.join('{0}={1}'.format(column, repr(getattr(self, column)))
-                          for column
-                          in ['id',
-                              'device_id',
-                              'name',
-                              'module_type',
-                              'data_type']))
+                ', '.join(
+                        '{0}={1}'.format(column.key,
+                                         repr(getattr(self, column.key)))
+                        for column in mapper.column_attrs))
 
 
 Device.modules = sqlalchemy.orm.relationship(
