@@ -99,6 +99,14 @@ class Database:
         session.commit()
         session.close()
 
+    def unregister(self, device_id: str) -> None:
+        session = self.session()
+        device = session.query(Device).filter_by(id=device_id).one_or_none()
+        if device is not None:
+            session.delete(device)
+            session.commit()
+        session.close()
+
     def device(self, device_id: str) -> Optional[Device]:
         session = self.session()
         result: Optional[Device] = (
