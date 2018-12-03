@@ -18,7 +18,8 @@ class Device(_DeclarativeBase):
             'Module',
             order_by='Module.id',
             back_populates='device',
-            lazy='immediate')
+            lazy='immediate',
+            cascade='all, delete-orphan')
 
     def __repr__(self) -> str:
         mapper = sqlalchemy.inspect(self.__class__)
