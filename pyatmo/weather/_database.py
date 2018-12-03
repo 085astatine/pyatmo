@@ -111,9 +111,7 @@ class Database:
         session = self.session()
         result: Optional[Device] = (
                 session.query(Device)
+                .options(sqlalchemy.orm.joinedload(Device.modules))
                 .filter_by(id=device_id).one_or_none())
-        if result is not None:
-            # load relationship
-            result.modules
         session.close()
         return result

@@ -17,7 +17,8 @@ class Device(_DeclarativeBase):
     modules = sqlalchemy.orm.relationship(
             'Module',
             order_by='Module.id',
-            back_populates='device')
+            back_populates='device',
+            lazy='immediate')
 
     def __repr__(self) -> str:
         mapper = sqlalchemy.inspect(self.__class__)
@@ -42,7 +43,10 @@ class Module(_DeclarativeBase):
     module_type = sqlalchemy.Column(sqlalchemy.String)
     data_type = sqlalchemy.Column(sqlalchemy.String)
     # relationship
-    device = sqlalchemy.orm.relationship('Device', back_populates='modules')
+    device = sqlalchemy.orm.relationship(
+            'Device',
+            back_populates='modules',
+            lazy='immediate')
 
     def __repr__(self) -> str:
         mapper = sqlalchemy.inspect(self.__class__)
