@@ -13,6 +13,11 @@ class Device(_DeclarativeBase):
     latitude = sqlalchemy.Column(sqlalchemy.Float)
     longitude = sqlalchemy.Column(sqlalchemy.Float)
     altitude = sqlalchemy.Column(sqlalchemy.Float)
+    # relationship
+    modules = sqlalchemy.orm.relationship(
+            'Module',
+            order_by='Module.id',
+            back_populates='device')
 
     def __repr__(self) -> str:
         mapper = sqlalchemy.inspect(self.__class__)
@@ -48,9 +53,3 @@ class Module(_DeclarativeBase):
                         '{0}={1}'.format(column.key,
                                          repr(getattr(self, column.key)))
                         for column in mapper.column_attrs))
-
-
-Device.modules = sqlalchemy.orm.relationship(
-        'Module',
-        order_by=Module.id,
-        back_populates='device')
