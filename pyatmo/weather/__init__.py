@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from ._database import Database
+from ._database import Database, SQLLogging

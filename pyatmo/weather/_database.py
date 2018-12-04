@@ -5,7 +5,7 @@ import pathlib
 from typing import Optional
 import sqlalchemy
 from ._device import Device, Module
-from ._sqlalchemy import _DeclarativeBase
+from ._sqlalchemy import SQLLogging, _DeclarativeBase
 from .._client import Client
 
 
@@ -14,7 +14,8 @@ class Database:
             self,
             path: pathlib.Path,
             client: Client,
-            logger: Optional[logging.Logger] = None) -> None:
+            logger: Optional[logging.Logger] = None,
+            sql_logging: SQLLogging = SQLLogging.NONE) -> None:
         # logger
         self._logger = logger or logging.getLogger(__name__)
         # client
@@ -22,7 +23,8 @@ class Database:
         # sqlalchemy engine
         self._engine = sqlalchemy.create_engine(
                 'sqlite:///{0}'.format(path.as_posix()),
-                encoding='utf-8')
+                encoding='utf-8',
+                echo=sql_logging.sqlalchemy_echo())
         _DeclarativeBase.metadata.create_all(self._engine)
         # sqlalchemy session maker
         self._session_maker = sqlalchemy.orm.sessionmaker(bind=self._engine)
