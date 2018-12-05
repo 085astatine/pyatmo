@@ -4,8 +4,8 @@ import logging
 import pathlib
 from typing import Optional
 import sqlalchemy
-from ._device import Device, Module
 from ._sqlalchemy import SQLLogging, _DeclarativeBase
+from ._table import Device, Module
 from .._client import Client
 
 
