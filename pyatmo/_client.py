@@ -3,8 +3,8 @@
 import logging
 import pathlib
 from typing import Any, Dict, List, Optional
-import requests
 from ._oauth import CredentialFilter, OAuth
+from ._request import interval, request
 from ._scope import Scope
 
 
@@ -15,11 +15,14 @@ class Client:
             client_secret: str,
             scope_list: Optional[List[Scope]] = None,
             token_file: Optional[pathlib.Path] = None,
+            request_interval: Optional[float] = 1.0,
             logger: Optional[logging.Logger] = None) -> None:
         # logger
         self._logger = logger or logging.getLogger(__name__)
         for handler in self._logger.handlers:
             handler.addFilter(CredentialFilter())
+        # request interval
+        interval(request_interval)
         # oauth
         self._oauth = OAuth(
                 client_id,
@@ -51,7 +54,7 @@ class Client:
         if get_favorites is not None:
             data['get_favorites'] = get_favorites
         self._logger.debug('data: {0}'.format(data))
-        response = requests.post(url, data=data)
+        response = request('post', url, data=data)
         if response.ok:
             self._logger.info('get stations data: success')
             self._logger.debug('status_code: {0}'.format(response.status_code))
@@ -98,7 +101,7 @@ class Client:
         if real_time is not None:
             data['real_time'] = real_time
         self._logger.debug('data: {0}'.format(data))
-        response = requests.post(url, data=data)
+        response = request('post', url, data=data)
         if response.ok:
             self._logger.info('get measure: success')
             self._logger.debug('status_code: {0}'.format(response.status_code))
@@ -131,7 +134,7 @@ class Client:
         if filter is not None:
             data['filter'] = filter
         self._logger.debug('data: {0}'.format(data))
-        response = requests.post(url, data=data)
+        response = request('post', url, data=data)
         if response.ok:
             self._logger.info('get public data: success')
             self._logger.debug('status_code: {0}'.format(response.status_code))

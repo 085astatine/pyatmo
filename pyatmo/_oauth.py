@@ -4,9 +4,9 @@ import datetime
 import logging
 import pathlib
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple
-import requests
 import yaml
 from ._scope import Scope
+from ._request import request
 
 
 __all__ = ['CredentialFilter', 'OAuth']
@@ -65,7 +65,7 @@ class OAuth:
         if self._scope_list is not None:
             data['scope'] = ' '.join(map(str, self._scope_list))
         self._logger.debug('data: {0}'.format(data))
-        response = requests.post(_token_url, data=data)
+        response = request('post', _token_url, data=data)
         if response.ok:
             self._logger.info('get access token: success')
             _update_token(self, response.json())
@@ -88,7 +88,7 @@ class OAuth:
                 'client_id': self._client_id,
                 'client_secret': self._client_secret,
                 'refresh_token': self._refresh_token}
-        response = requests.post(_token_url, data=data)
+        response = request('post', _token_url, data=data)
         if response.ok:
             self._logger.info('refresh token: success')
             _update_token(self, response.json())
