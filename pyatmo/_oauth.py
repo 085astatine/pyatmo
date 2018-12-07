@@ -152,14 +152,12 @@ class OAuth:
             # token
             _set_token(self, data['access_token'], data['refresh_token'])
             # time
-            self._token_created_time = (
-                    datetime.datetime.fromtimestamp(
-                            int(data['created_time']['timestamp']))
-                    .replace(tzinfo=self._timezone))
-            self._token_expiration_time = (
-                    datetime.datetime.fromtimestamp(
-                            int(data['expiration_time']['timestamp']))
-                    .replace(tzinfo=self._timezone))
+            self._token_created_time = datetime.datetime.fromtimestamp(
+                    int(data['created_time']['timestamp']),
+                    self._timezone)
+            self._token_expiration_time = datetime.datetime.fromtimestamp(
+                    int(data['expiration_time']['timestamp']),
+                    self._timezone)
 
     def is_included(self, scope: Scope) -> bool:
         if self._scope_list is not None:
