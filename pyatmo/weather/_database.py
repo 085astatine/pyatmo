@@ -140,7 +140,7 @@ class Database:
                         scale='max',
                         type_list=module.data_type.split(','),
                         date_begin=date_begin,
-                        optimize=False)
+                        optimize=True)
                 if response is None:
                     self._logger.error('get measure failed')
                     break
@@ -149,13 +149,16 @@ class Database:
                     self._logger.info('there is no latest measurement')
                     break
                 # insert into
-                for timestamp, value_list in response['body'].items():
-                    data: Dict[str, Any] = {}
-                    data['timestamp'] = int(timestamp)
-                    data['module_id'] = module.id
-                    data.update(zip(header, value_list))
-                    measurements = Measurements(**data)
-                    session.add(measurements)
+                for value_set in response['body']:
+                    begin_time: int = value_set['beg_time']
+                    step_time: int = value_set.get('step_time', 0)
+                    for i, value in enumerate(value_set['value']):
+                        data: Dict[str, Any] = {}
+                        data['timestamp'] = begin_time + i * step_time
+                        data['module_id'] = module.id
+                        data.update(zip(header, value))
+                        measurements = Measurements(**data)
+                        session.add(measurements)
                 session.flush()
                 session.commit()
         session.close()
