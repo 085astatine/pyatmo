@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 import logging
+import re
 import pathlib
-from typing import Optional
+from typing import Any, Dict, Optional, Tuple
 import sqlalchemy
 from ._sqlalchemy import SQLLogging, _DeclarativeBase
-from ._table import Device, Module
+from ._table import Device, Measurements, Module
 from .._client import Client
 
 
@@ -109,6 +111,55 @@ class Database:
             session.commit()
         session.close()
 
+    def update(self) -> None:
+        session = self.session()
+        timezone = datetime.datetime.now().astimezone().tzinfo
+        for module in session.query(Module).all():
+            self._logger.info('update module: {0}'.format(module.id))
+            header = list(map(to_snake_case, module.data_type.split(',')))
+            while True:
+                # get latest timestamp
+                latest_row: Optional[Tuple[int]] = (
+                        session
+                        .query(Measurements.timestamp)
+                        .filter_by(module_id=module.id)
+                        .order_by(Measurements.timestamp.desc())
+                        .first())
+                date_begin: Optional[int] = (
+                        int(latest_row[0]) + 1
+                        if latest_row is not None
+                        else None)
+                self._logger.info('update measurements from {0}'.format(
+                        datetime.datetime.fromtimestamp(date_begin, timezone)
+                        if date_begin is not None
+                        else None))
+                # request
+                response = self._client.get_measure(
+                        device_id=module.device_id,
+                        module_id=module.id,
+                        scale='max',
+                        type_list=module.data_type.split(','),
+                        date_begin=date_begin,
+                        optimize=False)
+                if response is None:
+                    self._logger.error('get measure failed')
+                    break
+                # no latest data
+                if len(response['body']) == 0:
+                    self._logger.info('there is no latest measurement')
+                    break
+                # insert into
+                for timestamp, value_list in response['body'].items():
+                    data: Dict[str, Any] = {}
+                    data['timestamp'] = int(timestamp)
+                    data['module_id'] = module.id
+                    data.update(zip(header, value_list))
+                    measurements = Measurements(**data)
+                    session.add(measurements)
+                session.flush()
+                session.commit()
+        session.close()
+
     def device(self, device_id: str) -> Optional[Device]:
         session = self.session()
         result: Optional[Device] = (
@@ -117,3 +168,8 @@ class Database:
                 .filter_by(id=device_id).one_or_none())
         session.close()
         return result
+
+
+def to_snake_case(string: str) -> str:
+    string = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', string)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', string).lower()
