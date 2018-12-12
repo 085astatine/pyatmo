@@ -4,7 +4,7 @@ import datetime
 import logging
 import re
 import pathlib
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import sqlalchemy
 from ._sqlalchemy import SQLLogging, _DeclarativeBase
 from ._table import Device, Measurements, Module
@@ -169,6 +169,25 @@ class Database:
                 session.query(Device)
                 .options(sqlalchemy.orm.joinedload(Device.modules))
                 .filter_by(id=device_id).one_or_none())
+        session.close()
+        return result
+
+    def measurements(
+            self,
+            module: Module,
+            begin_timestamp: Optional[int] = None,
+            end_timestamp: Optional[int] = None) -> List[Measurements]:
+        session = self.session()
+        query = (session
+                 .query(Measurements)
+                 .filter_by(module_id=module.id)
+                 .options(sqlalchemy.orm.joinedload(Measurements.module))
+                 .order_by(Measurements.timestamp))
+        if begin_timestamp is not None:
+            query = query.filter(Measurements.timestamp >= begin_timestamp)
+        if end_timestamp is not None:
+            query = query.filter(Measurements.timestamp <= end_timestamp)
+        result = query.all()
         session.close()
         return result
 
