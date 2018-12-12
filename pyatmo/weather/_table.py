@@ -48,6 +48,9 @@ class Module(_DeclarativeBase):
             'Device',
             back_populates='modules',
             lazy='immediate')
+    measurements = sqlalchemy.orm.relationship(
+            'Measurements',
+            cascade='all')
 
     def __repr__(self) -> str:
         mapper = sqlalchemy.inspect(self.__class__)
