@@ -169,7 +169,18 @@ class Database:
         result: Optional[Device] = (
                 session.query(Device)
                 .options(sqlalchemy.orm.joinedload(Device.modules))
-                .filter_by(id=device_id).one_or_none())
+                .filter_by(id=device_id)
+                .one_or_none())
+        session.close()
+        return result
+
+    def all_device(self) -> List[Device]:
+        session = self.session()
+        result: List[Device] = (
+                session.query(Device)
+                .options(sqlalchemy.orm.joinedload(Device.modules))
+                .order_by(Device.id)
+                .all())
         session.close()
         return result
 
