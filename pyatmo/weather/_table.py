@@ -50,6 +50,7 @@ class Module(_DeclarativeBase):
             lazy='immediate')
     measurements = sqlalchemy.orm.relationship(
             'Measurements',
+            lazy='raise',
             cascade='all')
 
     def __repr__(self) -> str:
