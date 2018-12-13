@@ -116,7 +116,8 @@ class Database:
         timezone = datetime.datetime.now().astimezone().tzinfo
         for module in session.query(Module).all():
             self._logger.info('update module: {0}'.format(module.id))
-            header = list(map(to_snake_case, module.data_type.split(',')))
+            type_list = data_type_to_type_list(module.data_type)
+            header = list(map(to_snake_case, type_list))
             while True:
                 # get latest timestamp
                 latest_row: Optional[Tuple[int]] = (
@@ -138,7 +139,7 @@ class Database:
                         device_id=module.device_id,
                         module_id=module.id,
                         scale='max',
-                        type_list=module.data_type.split(','),
+                        type_list=type_list,
                         date_begin=date_begin,
                         optimize=True)
                 if response is None:
@@ -195,3 +196,17 @@ class Database:
 def to_snake_case(string: str) -> str:
     string = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', string)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', string).lower()
+
+
+def data_type_to_type_list(data_type: str) -> List[str]:
+    result: List[str] = []
+    for value in map(lambda x: x.strip(), data_type.split(',')):
+        if value == 'Wind':
+            result.extend([
+                    'WindStrength',
+                    'WindAngle',
+                    'GustStrength',
+                    'GustAngle'])
+        else:
+            result.append(value)
+    return result
