@@ -104,11 +104,14 @@ class Database:
         session.close()
 
     def unregister(self, device_id: str) -> None:
+        self._logger.info('unregister device: {0}'.format(device_id))
         session = self.session()
         device = session.query(Device).filter_by(id=device_id).one_or_none()
         if device is not None:
             session.delete(device)
             session.commit()
+        else:
+            self._logger.error('device is not registered')
         session.close()
 
     def update(self) -> None:
