@@ -106,7 +106,14 @@ class Database:
     def unregister(self, device_id: str) -> None:
         self._logger.info('unregister device: {0}'.format(device_id))
         session = self.session()
-        device = session.query(Device).filter_by(id=device_id).one_or_none()
+        device: Optional[Device] = (
+                session
+                .query(Device)
+                .options(
+                        sqlalchemy.orm.joinedload(Device.modules)
+                        .joinedload(Module.measurements, innerjoin=True))
+                .filter_by(id=device_id)
+                .one_or_none())
         if device is not None:
             session.delete(device)
             session.commit()
