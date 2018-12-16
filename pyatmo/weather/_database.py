@@ -121,14 +121,16 @@ class Database:
             self._logger.error('device is not registered')
         session.close()
 
-    def update(self) -> None:
+    def update(self, request_limit: Optional[int] = None) -> None:
         session = self.session()
         timezone = datetime.datetime.now().astimezone().tzinfo
         for module in session.query(Module).all():
             self._logger.info('update module: {0}'.format(module.id))
             type_list = data_type_to_type_list(module.data_type)
             header = list(map(to_snake_case, type_list))
-            while True:
+            request_count = 0
+            while request_limit is None or request_count < request_limit:
+                request_count += 1
                 # get latest timestamp
                 latest_row: Optional[Tuple[int]] = (
                         session
