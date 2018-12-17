@@ -39,10 +39,11 @@ class Module(_DeclarativeBase):
     id = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     device_id = sqlalchemy.Column(
             sqlalchemy.String,
-            sqlalchemy.ForeignKey('devices.id'))
+            sqlalchemy.ForeignKey('devices.id'),
+            nullable=False)
     name = sqlalchemy.Column(sqlalchemy.String)
-    module_type = sqlalchemy.Column(sqlalchemy.String)
-    data_type = sqlalchemy.Column(sqlalchemy.String)
+    module_type = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    data_type = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     # relationship
     device = sqlalchemy.orm.relationship(
             'Device',
