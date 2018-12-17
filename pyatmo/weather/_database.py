@@ -5,6 +5,7 @@ import logging
 import re
 import pathlib
 from typing import Any, Dict, List, Optional, Tuple
+import pytz
 import sqlalchemy
 from ._sqlalchemy import SQLLogging, _DeclarativeBase
 from ._table import Device, Measurements, Module
@@ -124,11 +125,11 @@ class Database:
 
     def update(self, request_limit: Optional[int] = None) -> None:
         session = self.session()
-        timezone = datetime.datetime.now().astimezone().tzinfo
         for module in session.query(Module).all():
             self._logger.info('update module: {0}'.format(module.id))
             type_list = data_type_to_type_list(module.data_type)
             header = list(map(to_snake_case, type_list))
+            timezone = pytz.timezone(module.device.timezone)
             request_count = 0
             while request_limit is None or request_count < request_limit:
                 request_count += 1

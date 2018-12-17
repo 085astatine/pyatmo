@@ -7,6 +7,7 @@ name = "pypi"
 requests = "*"
 pyyaml = "*"
 sqlalchemy = "*"
+pytz = "*"
 
 [dev-packages]
 
