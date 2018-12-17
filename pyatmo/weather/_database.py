@@ -53,7 +53,8 @@ class Database:
                     'name': device_data['station_name'],
                     'latitude': float(device_data['place']['location'][1]),
                     'longitude': float(device_data['place']['location'][0]),
-                    'altitude': float(device_data['place']['altitude'])}
+                    'altitude': float(device_data['place']['altitude']),
+                    'timezone': device_data['place']['timezone']}
             device: Optional[Device] = (
                     session.query(Device)
                     .filter_by(id=device_argv['id']).one_or_none())

@@ -13,6 +13,7 @@ class Device(_DeclarativeBase):
     latitude = sqlalchemy.Column(sqlalchemy.Float)
     longitude = sqlalchemy.Column(sqlalchemy.Float)
     altitude = sqlalchemy.Column(sqlalchemy.Float)
+    timezone = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     # relationship
     modules = sqlalchemy.orm.relationship(
             'Module',
