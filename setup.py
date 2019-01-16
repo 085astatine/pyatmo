@@ -13,6 +13,6 @@ setup(
         'pyatmo.weather'],
     install_requires=[
         'pytz',
-        'pyyaml',
-        'requests',
+        'pyyaml>=4.2b1',
+        'requests>=2.20',
         'sqlalchemy'])
