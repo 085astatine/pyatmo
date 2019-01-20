@@ -125,14 +125,13 @@ class Database:
 
     def update(self, request_limit: Optional[int] = None) -> None:
         session = self.session()
+        request_count = 0
         for module in session.query(Module).all():
             self._logger.info('update module: {0}'.format(module.id))
             type_list = data_type_to_type_list(module.data_type)
             header = list(map(to_snake_case, type_list))
             timezone = pytz.timezone(module.device.timezone)
-            request_count = 0
             while request_limit is None or request_count < request_limit:
-                request_count += 1
                 # get latest timestamp
                 latest_row: Optional[Tuple[int]] = (
                         session
@@ -149,6 +148,7 @@ class Database:
                         if date_begin is not None
                         else None))
                 # request
+                request_count += 1
                 response = self._client.get_measure(
                         device_id=module.device_id,
                         module_id=module.id,
