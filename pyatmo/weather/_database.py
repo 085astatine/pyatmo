@@ -123,8 +123,9 @@ class Database:
             self._logger.error('device is not registered')
         session.close()
 
-    def update(self, request_limit: Optional[int] = None) -> None:
+    def update(self, request_limit: Optional[int] = None) -> bool:
         session = self.session()
+        is_updated = False
         request_count = 0
         for module in session.query(Module).all():
             self._logger.info('update module: {0}'.format(module.id))
@@ -164,6 +165,7 @@ class Database:
                     self._logger.info('there is no latest measurement')
                     break
                 # insert into
+                is_updated = True
                 for value_set in response['body']:
                     begin_time: int = value_set['beg_time']
                     step_time: int = value_set.get('step_time', 0)
@@ -177,6 +179,7 @@ class Database:
                 session.flush()
                 session.commit()
         session.close()
+        return is_updated
 
     def device(self, device_id: str) -> Optional[Device]:
         session = self.session()
