@@ -4,6 +4,7 @@ import datetime
 import logging
 import re
 import pathlib
+import time
 from typing import Any, Dict, List, Optional, Tuple
 import pytz
 import sqlalchemy
@@ -123,7 +124,9 @@ class Database:
             self._logger.error('device is not registered')
         session.close()
 
-    def update(self, request_limit: Optional[int] = None) -> bool:
+    def update(self,
+               request_limit: Optional[int] = None,
+               min_update_interval: Optional[float] = 600) -> bool:
         session = self.session()
         is_updated = False
         request_count = 0
@@ -140,22 +143,34 @@ class Database:
                         .filter_by(module_id=module.id)
                         .order_by(Measurements.timestamp.desc())
                         .first())
-                date_begin: Optional[int] = (
-                        int(latest_row[0]) + 1
+                latest: Optional[int] = (
+                        int(latest_row[0])
                         if latest_row is not None
                         else None)
-                self._logger.info('update measurements from {0}'.format(
-                        datetime.datetime.fromtimestamp(date_begin, timezone)
-                        if date_begin is not None
-                        else None))
+                # check update interval
+                if (latest is not None
+                        and min_update_interval is not None
+                        and time.time() - latest < min_update_interval):
+                    self._logger.info(
+                            'update is skipped because time({0}) has not passed'
+                            ' since the latest measurement({1})'
+                            .format(datetime.timedelta(
+                                            seconds=min_update_interval),
+                                    datetime.datetime.fromtimestamp(
+                                            latest, timezone)))
+                    break
                 # request
+                self._logger.info('update measurements from {0}'.format(
+                        datetime.datetime.fromtimestamp(latest, timezone)
+                        if latest is not None
+                        else None))
                 request_count += 1
                 response = self._client.get_measure(
                         device_id=module.device_id,
                         module_id=module.id,
                         scale='max',
                         type_list=type_list,
-                        date_begin=date_begin,
+                        date_begin=latest + 1 if latest is not None else None,
                         optimize=True)
                 if response is None:
                     self._logger.error('get measure failed')
