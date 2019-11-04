@@ -40,9 +40,9 @@ class OAuth:
         self._token_expiration_time: Optional[datetime.datetime] = None
         # scope
         self._scope_list: Optional[Tuple[Scope, ...]] = None
-        if scope_list is not None and len(scope_list) != 0:
+        if scope_list is not None and scope_list:
             self._scope_list = tuple(sorted(scope_list, key=lambda x: x.value))
-        assert(self._scope_list is None or len(self._scope_list) != 0)
+        assert self._scope_list is None or self._scope_list
         # token file
         self._token_file = token_file
         if self._token_file is not None and self._token_file.exists():

@@ -175,7 +175,7 @@ class Database:
                     self._logger.error('get measure failed')
                     break
                 # no latest data
-                if len(response['body']) == 0:
+                if not response['body']:
                     self._logger.info('there is no latest measurement')
                     break
                 # insert into
