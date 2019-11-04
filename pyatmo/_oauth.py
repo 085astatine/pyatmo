@@ -12,7 +12,7 @@ from ._request import request
 __all__ = ['CredentialFilter', 'OAuth']
 
 
-_token_url = 'https://api.netatmo.com/oauth2/token'
+_TOKEN_URL = 'https://api.netatmo.com/oauth2/token'
 
 
 class OAuth:
@@ -65,7 +65,7 @@ class OAuth:
         if self._scope_list is not None:
             data['scope'] = ' '.join(map(str, self._scope_list))
         self._logger.debug('data: %s', data)
-        response = request('post', _token_url, data=data)
+        response = request('post', _TOKEN_URL, data=data)
         if response.ok:
             self._logger.info('get access token: success')
             self._update_token(response.json())
@@ -88,7 +88,7 @@ class OAuth:
                 'client_id': self._client_id,
                 'client_secret': self._client_secret,
                 'refresh_token': self._refresh_token}
-        response = request('post', _token_url, data=data)
+        response = request('post', _TOKEN_URL, data=data)
         if response.ok:
             self._logger.info('refresh token: success')
             self._update_token(response.json())
@@ -148,7 +148,7 @@ class OAuth:
                         ', '.join(map(str, scope_list))
                         if scope_list is not None
                         else scope_list)
-            assert(scope_list == self._scope_list)
+            assert scope_list == self._scope_list
             # token
             self._set_token(data['access_token'], data['refresh_token'])
             # time
