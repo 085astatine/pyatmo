@@ -162,8 +162,7 @@ class OAuth:
     def is_included(self, scope: Scope) -> bool:
         if self._scope_list is not None:
             return scope in self._scope_list
-        else:
-            return scope is Scope.default()
+        return scope is Scope.default()
 
     @property
     def access_token(self) -> Optional[str]:

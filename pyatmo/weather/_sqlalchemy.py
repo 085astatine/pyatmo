@@ -13,10 +13,9 @@ class SQLLogging(enum.Enum):
     def sqlalchemy_echo(self) -> Union[bool, str]:
         if self is self.__class__.STATEMENTS:
             return True
-        elif self is self.__class__.STATEMENTS_AND_ROWS:
+        if self is self.__class__.STATEMENTS_AND_ROWS:
             return 'debug'
-        else:
-            return False
+        return False
 
 
 _DeclarativeBase = sqlalchemy.ext.declarative.declarative_base()
