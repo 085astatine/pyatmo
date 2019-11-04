@@ -12,7 +12,7 @@ from ._request import request
 __all__ = ['CredentialFilter', 'OAuth']
 
 
-_token_url = 'https://api.netatmo.com/oauth2/token'
+_TOKEN_URL = 'https://api.netatmo.com/oauth2/token'
 
 
 class OAuth:
@@ -40,9 +40,9 @@ class OAuth:
         self._token_expiration_time: Optional[datetime.datetime] = None
         # scope
         self._scope_list: Optional[Tuple[Scope, ...]] = None
-        if scope_list is not None and len(scope_list) != 0:
+        if scope_list is not None and scope_list:
             self._scope_list = tuple(sorted(scope_list, key=lambda x: x.value))
-        assert(self._scope_list is None or len(self._scope_list) != 0)
+        assert self._scope_list is None or self._scope_list
         # token file
         self._token_file = token_file
         if self._token_file is not None and self._token_file.exists():
@@ -64,20 +64,20 @@ class OAuth:
                 'password': password}
         if self._scope_list is not None:
             data['scope'] = ' '.join(map(str, self._scope_list))
-        self._logger.debug('data: {0}'.format(data))
-        response = request('post', _token_url, data=data)
+        self._logger.debug('data: %s', data)
+        response = request('post', _TOKEN_URL, data=data)
         if response.ok:
             self._logger.info('get access token: success')
-            _update_token(self, response.json())
-            self._logger.debug('status_code: {0}'.format(response.status_code))
-            self._logger.debug('text: {0}'.format(response.text))
+            self._update_token(response.json())
+            self._logger.debug('status_code: %s', response.status_code)
+            self._logger.debug('text: %s', response.text)
             # save
             if self._token_file is not None:
                 self.save_token(self._token_file)
         else:
             self._logger.error('get access token: failure')
-            self._logger.error('status_code: {0}'.format(response.status_code))
-            self._logger.error('text: {0}'.format(response.text))
+            self._logger.error('status_code: %s', response.status_code)
+            self._logger.error('text: %s', response.text)
 
     def refresh_token(self) -> None:
         self._logger.info('refresh token')
@@ -88,22 +88,22 @@ class OAuth:
                 'client_id': self._client_id,
                 'client_secret': self._client_secret,
                 'refresh_token': self._refresh_token}
-        response = request('post', _token_url, data=data)
+        response = request('post', _TOKEN_URL, data=data)
         if response.ok:
             self._logger.info('refresh token: success')
-            _update_token(self, response.json())
-            self._logger.debug('status_code: {0}'.format(response.status_code))
-            self._logger.debug('text: {0}'.format(response.text))
+            self._update_token(response.json())
+            self._logger.debug('status_code: %s', response.status_code)
+            self._logger.debug('text: %s', response.text)
             # save
             if self._token_file is not None:
                 self.save_token(self._token_file)
         else:
             self._logger.error('refresh token: failure')
-            self._logger.error('status_code: {0}'.format(response.status_code))
-            self._logger.error('text: {0}'.format(response.text))
+            self._logger.error('status_code: %s', response.status_code)
+            self._logger.error('text: %s', response.text)
 
     def save_token(self, path: pathlib.Path) -> None:
-        self._logger.info('save token: {0}'.format(path))
+        self._logger.info('save token: %s', path)
         if (self._access_token is not None
                 and self._refresh_token is not None
                 and self._token_created_time is not None
@@ -128,7 +128,7 @@ class OAuth:
             self._logger.error('token is None')
 
     def load_token(self, path: pathlib.Path) -> None:
-        self._logger.info('load token: {0}'.format(path))
+        self._logger.info('load token: %s', path)
         with path.open() as infile:
             data = yaml.load(infile)
             # scope match
@@ -141,16 +141,16 @@ class OAuth:
                     else None)
             if scope_list != self._scope_list:
                 self._logger.error(
-                        'scope mismatch: \'{0}\' (self) &  \'{1}\' (file)'
-                        .format(', '.join(map(str, self._scope_list))
-                                if self._scope_list is not None
-                                else self._scope_list,
-                                ', '.join(map(str, scope_list))
-                                if scope_list is not None
-                                else scope_list))
-            assert(scope_list == self._scope_list)
+                        'scope mismatch: \'%s\' (self) &  \'%s\' (file)',
+                        ', '.join(map(str, self._scope_list))
+                        if self._scope_list is not None
+                        else self._scope_list,
+                        ', '.join(map(str, scope_list))
+                        if scope_list is not None
+                        else scope_list)
+            assert scope_list == self._scope_list
             # token
-            _set_token(self, data['access_token'], data['refresh_token'])
+            self._set_token(data['access_token'], data['refresh_token'])
             # time
             self._token_created_time = datetime.datetime.fromtimestamp(
                     int(data['created_time']['timestamp']),
@@ -162,8 +162,7 @@ class OAuth:
     def is_included(self, scope: Scope) -> bool:
         if self._scope_list is not None:
             return scope in self._scope_list
-        else:
-            return scope is Scope.default()
+        return scope is Scope.default()
 
     @property
     def access_token(self) -> Optional[str]:
@@ -175,31 +174,29 @@ class OAuth:
             self.refresh_token()
         return self._access_token
 
+    def _update_token(self, data: Dict[str, str]) -> None:
+        self._set_token(data['access_token'], data['refresh_token'])
+        self._token_created_time = datetime.datetime.now().astimezone()
+        self._token_expiration_time = (
+                self._token_created_time
+                + datetime.timedelta(seconds=int(data['expires_in'])))
 
-def _update_token(self: OAuth, data: Dict[str, str]) -> None:
-    _set_token(self, data['access_token'], data['refresh_token'])
-    self._token_created_time = datetime.datetime.now().astimezone()
-    self._token_expiration_time = (
-            self._token_created_time
-            + datetime.timedelta(seconds=int(data['expires_in'])))
-
-
-def _set_token(self: OAuth, access_token: str, refresh_token: str) -> None:
-    # unregister to fileter
-    if self._access_token is not None:
-        CredentialFilter.unregister_credential(
-                self._access_token,
-                'ACCESS_TOKEN')
-    if self._refresh_token is not None:
-        CredentialFilter.unregister_credential(
-                self._refresh_token,
-                'REFRESH_TOKEN')
-    # set token
-    self._access_token = access_token
-    self._refresh_token = refresh_token
-    # register to fileter
-    CredentialFilter.register_credential(self._access_token, 'ACCESS_TOKEN')
-    CredentialFilter.register_credential(self._refresh_token, 'REFRESH_TOKEN')
+    def _set_token(self, access_token: str, refresh_token: str) -> None:
+        # unregister to fileter
+        if self._access_token is not None:
+            CredentialFilter.unregister_credential(
+                    self._access_token,
+                    'ACCESS_TOKEN')
+        if self._refresh_token is not None:
+            CredentialFilter.unregister_credential(
+                    self._refresh_token,
+                    'REFRESH_TOKEN')
+        # set token
+        self._access_token = access_token
+        self._refresh_token = refresh_token
+        # register to fileter
+        CredentialFilter.register_credential(self._access_token, 'ACCESS_TOKEN')
+        CredentialFilter.register_credential(self._refresh_token, 'REFRESH_TOKEN')
 
 
 class CredentialFilter(logging.Filter):
