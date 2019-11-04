@@ -68,7 +68,7 @@ class OAuth:
         response = request('post', _token_url, data=data)
         if response.ok:
             self._logger.info('get access token: success')
-            _update_token(self, response.json())
+            self._update_token(response.json())
             self._logger.debug('status_code: %s', response.status_code)
             self._logger.debug('text: %s', response.text)
             # save
@@ -91,7 +91,7 @@ class OAuth:
         response = request('post', _token_url, data=data)
         if response.ok:
             self._logger.info('refresh token: success')
-            _update_token(self, response.json())
+            self._update_token(response.json())
             self._logger.debug('status_code: %s', response.status_code)
             self._logger.debug('text: %s', response.text)
             # save
@@ -150,7 +150,7 @@ class OAuth:
                         else scope_list)
             assert(scope_list == self._scope_list)
             # token
-            _set_token(self, data['access_token'], data['refresh_token'])
+            self._set_token(data['access_token'], data['refresh_token'])
             # time
             self._token_created_time = datetime.datetime.fromtimestamp(
                     int(data['created_time']['timestamp']),
@@ -175,31 +175,29 @@ class OAuth:
             self.refresh_token()
         return self._access_token
 
+    def _update_token(self, data: Dict[str, str]) -> None:
+        self._set_token(data['access_token'], data['refresh_token'])
+        self._token_created_time = datetime.datetime.now().astimezone()
+        self._token_expiration_time = (
+                self._token_created_time
+                + datetime.timedelta(seconds=int(data['expires_in'])))
 
-def _update_token(self: OAuth, data: Dict[str, str]) -> None:
-    _set_token(self, data['access_token'], data['refresh_token'])
-    self._token_created_time = datetime.datetime.now().astimezone()
-    self._token_expiration_time = (
-            self._token_created_time
-            + datetime.timedelta(seconds=int(data['expires_in'])))
-
-
-def _set_token(self: OAuth, access_token: str, refresh_token: str) -> None:
-    # unregister to fileter
-    if self._access_token is not None:
-        CredentialFilter.unregister_credential(
-                self._access_token,
-                'ACCESS_TOKEN')
-    if self._refresh_token is not None:
-        CredentialFilter.unregister_credential(
-                self._refresh_token,
-                'REFRESH_TOKEN')
-    # set token
-    self._access_token = access_token
-    self._refresh_token = refresh_token
-    # register to fileter
-    CredentialFilter.register_credential(self._access_token, 'ACCESS_TOKEN')
-    CredentialFilter.register_credential(self._refresh_token, 'REFRESH_TOKEN')
+    def _set_token(self, access_token: str, refresh_token: str) -> None:
+        # unregister to fileter
+        if self._access_token is not None:
+            CredentialFilter.unregister_credential(
+                    self._access_token,
+                    'ACCESS_TOKEN')
+        if self._refresh_token is not None:
+            CredentialFilter.unregister_credential(
+                    self._refresh_token,
+                    'REFRESH_TOKEN')
+        # set token
+        self._access_token = access_token
+        self._refresh_token = refresh_token
+        # register to fileter
+        CredentialFilter.register_credential(self._access_token, 'ACCESS_TOKEN')
+        CredentialFilter.register_credential(self._refresh_token, 'REFRESH_TOKEN')
 
 
 class CredentialFilter(logging.Filter):
