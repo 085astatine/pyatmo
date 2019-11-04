@@ -5,15 +5,15 @@ from typing import Union
 import sqlalchemy.ext.declarative
 
 
-class SQLLogging(enum.Enum):
+class SQLLoggingLevel(enum.Enum):
     NONE = enum.auto()
     STATEMENTS = enum.auto()
     STATEMENTS_AND_ROWS = enum.auto()
 
     def sqlalchemy_echo(self) -> Union[bool, str]:
-        if self is self.__class__.STATEMENTS:
+        if self is SQLLoggingLevel.STATEMENTS:
             return True
-        if self is self.__class__.STATEMENTS_AND_ROWS:
+        if self is SQLLoggingLevel.STATEMENTS_AND_ROWS:
             return 'debug'
         return False
 
