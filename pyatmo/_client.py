@@ -53,17 +53,17 @@ class Client:
             data['device_id'] = device_id
         if get_favorites is not None:
             data['get_favorites'] = get_favorites
-        self._logger.debug('data: {0}'.format(data))
+        self._logger.debug('data: %s', data)
         response = request('post', url, data=data)
         if response.ok:
             self._logger.info('get stations data: success')
-            self._logger.debug('status_code: {0}'.format(response.status_code))
-            self._logger.debug('text: {0}'.format(response.text))
+            self._logger.debug('status_code: %s', response.status_code)
+            self._logger.debug('text: %s', response.text)
             return response.json()
         else:
             self._logger.error('get stations data: failure')
-            self._logger.error('status_code: {0}'.format(response.status_code))
-            self._logger.error('text: {0}'.format(response.text))
+            self._logger.error('status_code: %s', response.status_code)
+            self._logger.error('text: %s', response.text)
             return None
 
     def get_measure(
@@ -100,17 +100,17 @@ class Client:
             data['optimize'] = optimize
         if real_time is not None:
             data['real_time'] = real_time
-        self._logger.debug('data: {0}'.format(data))
+        self._logger.debug('data: %s', data)
         response = request('post', url, data=data)
         if response.ok:
             self._logger.info('get measure: success')
-            self._logger.debug('status_code: {0}'.format(response.status_code))
-            self._logger.debug('text: {0}'.format(response.text))
+            self._logger.debug('status_code: %s', response.status_code)
+            self._logger.debug('text: %s', response.text)
             return response.json()
         else:
             self._logger.error('get measure: failure')
-            self._logger.error('status_code: {0}'.format(response.status_code))
-            self._logger.error('text: {0}'.format(response.text))
+            self._logger.error('status_code: %s', response.status_code)
+            self._logger.error('text: %s', response.text)
             return None
 
     def get_public_data(
@@ -133,15 +133,15 @@ class Client:
             data['required_data'] = required_data
         if filter is not None:
             data['filter'] = filter
-        self._logger.debug('data: {0}'.format(data))
+        self._logger.debug('data: %s', data)
         response = request('post', url, data=data)
         if response.ok:
             self._logger.info('get public data: success')
-            self._logger.debug('status_code: {0}'.format(response.status_code))
-            self._logger.debug('text: {0}'.format(response.text))
+            self._logger.debug('status_code: %s', response.status_code)
+            self._logger.debug('text: %s', response.text)
             return response.json()
         else:
             self._logger.error('get public data: failure')
-            self._logger.error('status_code: {0}'.format(response.status_code))
-            self._logger.error('text: {0}'.format(response.text))
+            self._logger.error('status_code: %s', response.status_code)
+            self._logger.error('text: %s', response.text)
             return None

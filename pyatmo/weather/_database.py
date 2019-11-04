@@ -107,7 +107,7 @@ class Database:
         session.close()
 
     def unregister(self, device_id: str) -> None:
-        self._logger.info('unregister device: {0}'.format(device_id))
+        self._logger.info('unregister device: %s', device_id)
         session = self.session()
         device: Optional[Device] = (
                 session
@@ -131,7 +131,7 @@ class Database:
         is_updated = False
         request_count = 0
         for module in session.query(Module).all():
-            self._logger.info('update module: {0}'.format(module.id))
+            self._logger.info('update module: %s', module.id)
             type_list = data_type_to_type_list(module.data_type)
             header = list(map(to_snake_case, type_list))
             timezone = pytz.timezone(module.device.timezone)
@@ -152,18 +152,17 @@ class Database:
                         and min_update_interval is not None
                         and time.time() - latest < min_update_interval):
                     self._logger.info(
-                            'update is skipped because time({0}) has not passed'
-                            ' since the latest measurement({1})'
-                            .format(datetime.timedelta(
-                                            seconds=min_update_interval),
-                                    datetime.datetime.fromtimestamp(
-                                            latest, timezone)))
+                            'update is skipped because time(%s) has not passed'
+                            ' since the latest measurement(%s)',
+                            datetime.timedelta(seconds=min_update_interval),
+                            datetime.datetime.fromtimestamp(latest, timezone))
                     break
                 # request
-                self._logger.info('update measurements from {0}'.format(
+                self._logger.info(
+                        'update measurements from %s',
                         datetime.datetime.fromtimestamp(latest, timezone)
                         if latest is not None
-                        else None))
+                        else None)
                 request_count += 1
                 response = self._client.get_measure(
                         device_id=module.device_id,

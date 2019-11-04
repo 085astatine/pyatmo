@@ -64,20 +64,20 @@ class OAuth:
                 'password': password}
         if self._scope_list is not None:
             data['scope'] = ' '.join(map(str, self._scope_list))
-        self._logger.debug('data: {0}'.format(data))
+        self._logger.debug('data: %s', data)
         response = request('post', _token_url, data=data)
         if response.ok:
             self._logger.info('get access token: success')
             _update_token(self, response.json())
-            self._logger.debug('status_code: {0}'.format(response.status_code))
-            self._logger.debug('text: {0}'.format(response.text))
+            self._logger.debug('status_code: %s', response.status_code)
+            self._logger.debug('text: %s', response.text)
             # save
             if self._token_file is not None:
                 self.save_token(self._token_file)
         else:
             self._logger.error('get access token: failure')
-            self._logger.error('status_code: {0}'.format(response.status_code))
-            self._logger.error('text: {0}'.format(response.text))
+            self._logger.error('status_code: %s', response.status_code)
+            self._logger.error('text: %s', response.text)
 
     def refresh_token(self) -> None:
         self._logger.info('refresh token')
@@ -92,18 +92,18 @@ class OAuth:
         if response.ok:
             self._logger.info('refresh token: success')
             _update_token(self, response.json())
-            self._logger.debug('status_code: {0}'.format(response.status_code))
-            self._logger.debug('text: {0}'.format(response.text))
+            self._logger.debug('status_code: %s', response.status_code)
+            self._logger.debug('text: %s', response.text)
             # save
             if self._token_file is not None:
                 self.save_token(self._token_file)
         else:
             self._logger.error('refresh token: failure')
-            self._logger.error('status_code: {0}'.format(response.status_code))
-            self._logger.error('text: {0}'.format(response.text))
+            self._logger.error('status_code: %s', response.status_code)
+            self._logger.error('text: %s', response.text)
 
     def save_token(self, path: pathlib.Path) -> None:
-        self._logger.info('save token: {0}'.format(path))
+        self._logger.info('save token: %s', path)
         if (self._access_token is not None
                 and self._refresh_token is not None
                 and self._token_created_time is not None
@@ -128,7 +128,7 @@ class OAuth:
             self._logger.error('token is None')
 
     def load_token(self, path: pathlib.Path) -> None:
-        self._logger.info('load token: {0}'.format(path))
+        self._logger.info('load token: %s', path)
         with path.open() as infile:
             data = yaml.load(infile)
             # scope match
@@ -141,13 +141,13 @@ class OAuth:
                     else None)
             if scope_list != self._scope_list:
                 self._logger.error(
-                        'scope mismatch: \'{0}\' (self) &  \'{1}\' (file)'
-                        .format(', '.join(map(str, self._scope_list))
-                                if self._scope_list is not None
-                                else self._scope_list,
-                                ', '.join(map(str, scope_list))
-                                if scope_list is not None
-                                else scope_list))
+                        'scope mismatch: \'%s\' (self) &  \'%s\' (file)',
+                        ', '.join(map(str, self._scope_list))
+                        if self._scope_list is not None
+                        else self._scope_list,
+                        ', '.join(map(str, scope_list))
+                        if scope_list is not None
+                        else scope_list)
             assert(scope_list == self._scope_list)
             # token
             _set_token(self, data['access_token'], data['refresh_token'])
