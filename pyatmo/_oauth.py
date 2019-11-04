@@ -129,8 +129,10 @@ class OAuth:
 
     def load_token(self, path: pathlib.Path) -> None:
         self._logger.info('load token: %s', path)
-        with path.open() as infile:
-            data = yaml.load(infile)
+        with path.open() as token_file:
+            data = yaml.load(
+                token_file,
+                Loader=yaml.SafeLoader)
             # scope match
             scope_list: Optional[Tuple[Scope, ...]] = (
                     tuple(sorted(
