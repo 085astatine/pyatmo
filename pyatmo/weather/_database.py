@@ -8,7 +8,7 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 import pytz
 import sqlalchemy
-from ._sqlalchemy import SQLLogging, _DeclarativeBase
+from ._sqlalchemy import SQLLoggingLevel, _DeclarativeBase
 from ._table import Device, Measurements, Module
 from .._client import Client
 
@@ -19,7 +19,7 @@ class Database:
             path: pathlib.Path,
             client: Client,
             logger: Optional[logging.Logger] = None,
-            sql_logging: SQLLogging = SQLLogging.NONE) -> None:
+            sql_logging_level: SQLLoggingLevel = SQLLoggingLevel.NONE) -> None:
         # logger
         self._logger = logger or logging.getLogger(__name__)
         # client
@@ -28,7 +28,7 @@ class Database:
         self._engine = sqlalchemy.create_engine(
                 'sqlite:///{0}'.format(path.as_posix()),
                 encoding='utf-8',
-                echo=sql_logging.sqlalchemy_echo())
+                echo=sql_logging_level.sqlalchemy_echo())
         _DeclarativeBase.metadata.create_all(self._engine)
         # sqlalchemy session maker
         self._session_maker = sqlalchemy.orm.sessionmaker(bind=self._engine)
